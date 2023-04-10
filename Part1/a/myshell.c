@@ -2,6 +2,7 @@
 #include "unistd.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "sys/wait.h"
 #include "LineParser.h"
 #include "string.h"
 
@@ -15,9 +16,15 @@ int main(int argc, char const *argv[])
     cmdLine *cmdLine;
     getcwd(cwd, PATH_MAX);
 
+    printf("the current working directory is: %s\n", cwd);
+
+    // Debug mode
+    for (int i = 1; i < argc; i++)
+        if (argv[i][0] == '-' && argv[i][1] == 'd')
+            fprintf(stderr, "PID: %d\nExecuting command: %s\n", getpid(), argv[0]);
+
     while (1)
     {
-        printf("the current working directory is: %s\n", cwd);
         if (fgets(line, sizeof(line), stdin) == NULL)
             printError("Line Reading Error");
 
@@ -37,8 +44,16 @@ int main(int argc, char const *argv[])
 
 void execute(cmdLine *cmdLine)
 {
-    if (execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
-        printError("Execution Error");
+    pid_t pid = fork();
+    if (pid < 0)
+        printError("Fork Error");
+    else if (pid == 0)
+    {
+        if (execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
+            printError("Execution Error");
+    }
+    else
+        wait(NULL);
 }
 
 void printError(char *errorMessage)
