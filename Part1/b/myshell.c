@@ -45,11 +45,14 @@ int main(int argc, char const *argv[])
 void execute(cmdLine *cmdLine)
 {
     pid_t pid = fork();
-    if (pid < 0)
+    int status;
+
+    if (pid < 0) // Couldn't fork for any reason
         printError("Fork Error");
-    else if (pid == 0)
-        if (execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
-            printError("Execution Error");
+    else if (pid == 0 && execvp(cmdLine->arguments[0], cmdLine->arguments) == -1) // Child process but execution failed
+        printError("Execution Error");
+    else if (pid > 0 && cmdLine->blocking) // Parent process and command is blocking
+        waitpid(pid, &status, 0);
 }
 
 void printError(char *errorMessage)
