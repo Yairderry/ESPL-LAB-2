@@ -47,11 +47,14 @@ void execute(cmdLine *cmdLine)
     pid_t pid = fork();
     int status;
 
-    if (pid < 0) // Couldn't fork for any reason
+    // Couldn't fork for any reason
+    if (pid < 0)
         printError("Fork Error");
-    else if (pid == 0 && execvp(cmdLine->arguments[0], cmdLine->arguments) == -1) // Child process but execution failed
+    // Child process but execution failed
+    else if (pid == 0 && execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
         printError("Execution Error");
-    else if (pid > 0 && cmdLine->blocking) // Parent process and command is blocking
+    // Parent process and command is blocking
+    else if (pid > 0 && cmdLine->blocking)
         waitpid(pid, &status, 0);
 }
 
