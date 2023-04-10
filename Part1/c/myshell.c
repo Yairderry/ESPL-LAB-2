@@ -14,7 +14,6 @@ int main(int argc, char const *argv[])
     char cwd[PATH_MAX];
     char line[2048];
     cmdLine *cmdLine;
-    getcwd(cwd, PATH_MAX);
 
     // Debug mode
     for (int i = 1; i < argc; i++)
@@ -23,6 +22,7 @@ int main(int argc, char const *argv[])
 
     while (1)
     {
+        getcwd(cwd, PATH_MAX);
         printf("the current working directory is: %s\n", cwd);
         if (fgets(line, sizeof(line), stdin) == NULL)
             error("Line Reading Error");
@@ -43,6 +43,13 @@ int main(int argc, char const *argv[])
 
 void execute(cmdLine *cmdLine)
 {
+    int isCD = cmdLine->arguments[0][0] == 'c' && cmdLine->arguments[0][1] == 'd';
+
+    if (isCD && chdir(cmdLine->arguments[1]) < 0)
+        error("Changing Directories Error");
+    else if (isCD)
+        return;
+
     pid_t pid = fork();
     int status;
 
