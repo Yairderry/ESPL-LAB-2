@@ -14,7 +14,6 @@ int main(int argc, char const *argv[])
     char cwd[PATH_MAX];
     char line[2048];
     cmdLine *cmdLine;
-    getcwd(cwd, PATH_MAX);
 
     // Debug mode
     for (int i = 1; i < argc; i++)
@@ -23,7 +22,8 @@ int main(int argc, char const *argv[])
 
     while (1)
     {
-        printf("the current working directory is: %s\n", cwd);
+        getcwd(cwd, PATH_MAX);
+        printf("%s\n", cwd);
 
         if (fgets(line, sizeof(line), stdin) == NULL)
             error("Line Reading Error");

@@ -13,16 +13,3 @@ LineParser.o: LineParser.c
 
 clean:
 	rm -f *.o
-
-# all: test 
-
-# test: test.o
-# 	gcc -m32 -g -Wall -o test test.o
-
-# test.o: test.c
-# 	gcc -g -Wall -m32 -c -o test.o test.c 
-
-# .PHONY: clean
-
-# clean:
-# 	rm -f *.o

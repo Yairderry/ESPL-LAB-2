@@ -14,16 +14,17 @@ int main(int argc, char const *argv[])
     char cwd[PATH_MAX];
     char line[2048];
     cmdLine *cmdLine;
-    getcwd(cwd, PATH_MAX);
+    int debug = 0;
 
     // Debug mode
     for (int i = 1; i < argc; i++)
         if (argv[i][0] == '-' && argv[i][1] == 'd')
-            fprintf(stderr, "PID: %d\nExecuting command: %s\n", getpid(), argv[0]);
+            debug = 1;
 
     while (1)
     {
-        printf("the current working directory is: %s\n", cwd);
+        getcwd(cwd, PATH_MAX);
+        printf("%s\n", cwd);
         if (fgets(line, sizeof(line), stdin) == NULL)
             error("Line Reading Error");
 
@@ -34,6 +35,9 @@ int main(int argc, char const *argv[])
 
         if (cmdLine == NULL)
             error("Parsing Error");
+
+        if (debug)
+            fprintf(stderr, "PID: %d\nExecuting command: %s\n", getpid(), argv[0]);
 
         execute(cmdLine);
         freeCmdLines(cmdLine);
