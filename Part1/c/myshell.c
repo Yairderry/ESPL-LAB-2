@@ -6,7 +6,7 @@
 #include "LineParser.h"
 #include "string.h"
 
-void execute(cmdLine *cmdLine);
+void execute(cmdLine *cmdLine, int debug);
 void error(char *errorMessage);
 
 int main(int argc, char const *argv[])
@@ -36,16 +36,13 @@ int main(int argc, char const *argv[])
         if (cmdLine == NULL)
             error("Parsing Error");
 
-        if (debug)
-            fprintf(stderr, "PID: %d\nExecuting command: %s\n", getpid(), argv[0]);
-
-        execute(cmdLine);
+        execute(cmdLine, debug);
         freeCmdLines(cmdLine);
     }
     return 0;
 }
 
-void execute(cmdLine *cmdLine)
+void execute(cmdLine *cmdLine, int debug)
 {
     int isCD = cmdLine->arguments[0][0] == 'c' && cmdLine->arguments[0][1] == 'd';
 
@@ -55,7 +52,9 @@ void execute(cmdLine *cmdLine)
         return;
 
     pid_t pid = fork();
-    int status;
+
+    if (debug && pid > 0)
+        fprintf(stderr, "PID: %d\nExecuting command: %s\n", pid, cmdLine->arguments[0]);
 
     // Couldn't fork for any reason
     if (pid < 0)
@@ -65,7 +64,7 @@ void execute(cmdLine *cmdLine)
         error("Execution Error");
     // Parent process and command is blocking
     else if (pid > 0 && cmdLine->blocking)
-        waitpid(pid, &status, 0);
+        waitpid(pid, NULL, 0);
 }
 
 void error(char *errorMessage)

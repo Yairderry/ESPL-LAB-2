@@ -10,7 +10,7 @@
 #include "sys/stat.h"
 #include "fcntl.h"
 
-void execute(cmdLine *cmdLine);
+void execute(cmdLine *cmdLine, int debug);
 void error(char *errorMessage);
 int signalProcess(char *pid, int signal);
 int cd(char *path);
@@ -42,33 +42,34 @@ int main(int argc, char const *argv[])
         if (cmdLine == NULL)
             error("Parsing Error");
 
-        if (debug)
-            fprintf(stderr, "PID: %d\nExecuting command: %s\n", getpid(), argv[0]);
-
-        execute(cmdLine);
+        execute(cmdLine, debug);
         freeCmdLines(cmdLine);
     }
     return 0;
 }
 
-void execute(cmdLine *cmdLine)
+void execute(cmdLine *cmdLine, int debug)
 {
     int isBasicCommand = 0;
 
     if (strcmp(cmdLine->arguments[0], "cd") == 0)
         isBasicCommand = cd(cmdLine->arguments[1]);
     else if (strcmp(cmdLine->arguments[0], "kill") == 0)
-        isBasicCommand = signalProcess(cmdLine->arguments[1],SIGTERM);
+        isBasicCommand = signalProcess(cmdLine->arguments[1], SIGTERM);
     else if (strcmp(cmdLine->arguments[0], "wake") == 0)
-        isBasicCommand = signalProcess(cmdLine->arguments[1],SIGCONT);
+        isBasicCommand = signalProcess(cmdLine->arguments[1], SIGCONT);
     else if (strcmp(cmdLine->arguments[0], "suspend") == 0)
-        isBasicCommand = signalProcess(cmdLine->arguments[1],SIGTSTP);
+        isBasicCommand = signalProcess(cmdLine->arguments[1], SIGTSTP);
 
     if (isBasicCommand)
         return;
 
     pid_t pid = fork();
-    int status;
+
+    // Print debug to child process
+    if (debug && pid > 0)
+        fprintf(stderr, "PID: %d\nExecuting command: %s\n", pid, cmdLine->arguments[0]);
+
     // Couldn't fork for any reason
     if (pid < 0)
         error("Fork Error");
@@ -77,7 +78,7 @@ void execute(cmdLine *cmdLine)
         error("Execution Error");
     // Parent process and command is blocking
     else if (pid > 0 && cmdLine->blocking)
-        waitpid(pid, &status, 0);
+        waitpid(pid, NULL, 0);
 }
 
 void error(char *errorMessage)

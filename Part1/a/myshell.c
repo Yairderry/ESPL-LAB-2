@@ -6,7 +6,7 @@
 #include "LineParser.h"
 #include "string.h"
 
-void execute(cmdLine *cmdLine);
+void execute(cmdLine *cmdLine, int debug);
 void error(char *errorMessage);
 
 int main(int argc, char const *argv[])
@@ -14,11 +14,12 @@ int main(int argc, char const *argv[])
     char cwd[PATH_MAX];
     char line[2048];
     cmdLine *cmdLine;
+    int debug = 0;
 
     // Debug mode
     for (int i = 1; i < argc; i++)
         if (argv[i][0] == '-' && argv[i][1] == 'd')
-            fprintf(stderr, "PID: %d\nExecuting command: %s\n", getpid(), argv[0]);
+            debug = 1;
 
     while (1)
     {
@@ -36,15 +37,19 @@ int main(int argc, char const *argv[])
         if (cmdLine == NULL)
             error("Parsing Error");
 
-        execute(cmdLine);
+        execute(cmdLine, debug);
         freeCmdLines(cmdLine);
     }
     return 0;
 }
 
-void execute(cmdLine *cmdLine)
+void execute(cmdLine *cmdLine, int debug)
 {
     pid_t pid = fork();
+
+    if (debug && pid > 0)
+        fprintf(stderr, "PID: %d\nExecuting command: %s\n", pid, cmdLine->arguments[0]);
+
     if (pid < 0)
         error("Fork Error");
     else if (pid == 0)
