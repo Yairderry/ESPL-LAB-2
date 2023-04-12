@@ -10,8 +10,7 @@ void handler(int sig)
 
 	signal(sig, SIG_DFL);
 	raise(sig);
-	signal(sig == SIGCONT ? SIGTSTP : sig == SIGTSTP ? SIGCONT
-													 : sig,
+	signal(sig == SIGCONT ? SIGTSTP : sig == SIGTSTP ? SIGCONT : sig,
 		   sig == SIGCONT || sig == SIGTSTP ? handler : SIG_DFL);
 }
 

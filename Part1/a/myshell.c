@@ -43,18 +43,17 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
+// int debug can be replaced by a global var
 void execute(cmdLine *cmdLine, int debug)
 {
     pid_t pid = fork();
 
-    if (debug && pid > 0)
-        fprintf(stderr, "PID: %d\nExecuting command: %s\n", pid, cmdLine->arguments[0]);
-
     if (pid < 0)
         error("Fork Error");
-    else if (pid == 0)
-        if (execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
-            error("Execution Error");
+    if (pid > 0 && debug)
+        fprintf(stderr, "PID: %d\nExecuting command: %s\n", pid, cmdLine->arguments[0]);
+    if (pid == 0 && execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
+        error("Execution Error");
 }
 
 void error(char *errorMessage)

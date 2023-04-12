@@ -12,8 +12,8 @@
 
 void execute(cmdLine *cmdLine, int debug);
 void error(char *errorMessage);
-void inputRedirect(char *path);
-void outputRedirect(char *path);
+void inputRedirect(char const *path);
+void outputRedirect(char const *path);
 
 int main(int argc, char const *argv[])
 {
@@ -35,7 +35,7 @@ int main(int argc, char const *argv[])
             error("Line Reading Error");
 
         if (strncmp(line, "quit\n", 5) == 0)
-            exit(0);
+            exit(EXIT_SUCCESS);
 
         cmdLine = parseCmdLines(line);
 
@@ -59,50 +59,57 @@ void execute(cmdLine *cmdLine, int debug)
 
     pid_t pid = fork();
 
-    if (debug && pid > 0)
-        fprintf(stderr, "PID: %d\nExecuting command: %s\n", pid, cmdLine->arguments[0]);
-
     // Couldn't fork for any reason
     if (pid < 0)
         error("Fork Error");
-    // Redirect input
-    else if (pid > 0 && cmdLine->inputRedirect)
-        inputRedirect(cmdLine->inputRedirect);
-    // Redirect output
-    else if (pid > 0 && cmdLine->outputRedirect)
-        outputRedirect(cmdLine->outputRedirect);
-    // Child process but execution failed
-    else if (pid == 0 && execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
-        error("Execution Error");
-    // Parent process and command is blocking
-    else if (pid > 0 && cmdLine->blocking)
+
+    // Parent process
+    if (pid > 0 && debug)
+        fprintf(stderr, "PID: %d\nExecuting command: %s\n", pid, cmdLine->arguments[0]);
+    if (pid > 0 && cmdLine->blocking)
         waitpid(pid, NULL, 0);
+
+    // Child process
+    if (pid == 0 && cmdLine->inputRedirect)
+        inputRedirect(cmdLine->inputRedirect);
+    if (pid == 0 && cmdLine->outputRedirect)
+        outputRedirect(cmdLine->outputRedirect);
+    if (pid == 0 && execvp(cmdLine->arguments[0], cmdLine->arguments) == -1)
+        error("Execution Error");
 }
 
 void error(char *errorMessage)
 {
     perror(errorMessage);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
-void inputRedirect(char *path)
+void inputRedirect(char const *path)
 {
     int fileDescriptor = open(path, O_RDONLY);
 
     if (fileDescriptor < 0)
         error("Redirect Error");
 
-    dup(fileDescriptor);
+    close(STDIN_FILENO);
+
+    if (dup(fileDescriptor) < 0)
+        error("Duplication Error");
+
     close(fileDescriptor);
 }
 
-void outputRedirect(char *path)
+void outputRedirect(char const *path)
 {
-    int fileDescriptor = open(path, O_CREAT | O_WRONLY);
+    int fileDescriptor = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
     if (fileDescriptor < 0)
         error("Redirect Error");
 
-    dup(fileDescriptor);
+    close(STDOUT_FILENO);
+
+    if (dup(fileDescriptor) < 0)
+        error("Duplication Error");
+
     close(fileDescriptor);
 }
