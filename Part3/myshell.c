@@ -57,7 +57,7 @@ void execute(cmdLine *cmdLine, int debug)
     if (strcmp(cmdLine->arguments[0], "cd") == 0)
         isBasicCommand = cd(cmdLine->arguments[1]);
     else if (strcmp(cmdLine->arguments[0], "kill") == 0)
-        isBasicCommand = signalProcess(cmdLine->arguments[1], SIGTERM);
+        isBasicCommand = signalProcess(cmdLine->arguments[1], SIGINT);
     else if (strcmp(cmdLine->arguments[0], "wake") == 0)
         isBasicCommand = signalProcess(cmdLine->arguments[1], SIGCONT);
     else if (strcmp(cmdLine->arguments[0], "suspend") == 0)
